@@ -1,9 +1,12 @@
+#!/usr/bin/env node
 const axios = require("axios");
 const argv = require("minimist")(process.argv.slice(2));
 const { format } = require("date-fns");
-const startOfTomorrow = require("date-fns/startOfTomorrow");
-const sound = require("sound-play");
-const path = require("path");
+const startOfToday = require("date-fns/startOfToday");
+const fs = require("fs");
+
+let jsonData = fs.readFileSync("pincodes.json");
+let pincodes = JSON.parse(jsonData);
 
 const defaultInterval = 15; // interval between pings in minutes
 const appointmentsListLimit = 2; // Increase/Decrease it based on the amount of information you want in the notification.
@@ -16,7 +19,7 @@ checkParams();
 function checkParams() {
   if (argv.help) {
     console.error("Refer documentation for more details");
-  } else if (argv._ && argv._.length && argv._.includes("run")) {
+  } else {
     if (argv.key && typeof argv.key !== "string") {
       console.error(
         "Please provide a valid IFTTT Webook API Key by appending --key=<IFTTT-KEY> to recieve mobile notification \nRefer documentation for more details"
@@ -42,8 +45,8 @@ function checkParams() {
         "Please provide required district id by appending --district=<DISTRICT-ID> \nRefer documentation for more details"
       );
       return;
-    } else if (argv.interval && argv.interval < 5) {
-      console.error("Please provide an interval greater than 5 minutes");
+    } else if (argv.interval && argv.interval < 0.5) {
+      console.error("Please provide an interval greater than 1/2 minute");
       return;
     } else {
       // Required arguments provided through cli and checks passed
@@ -54,10 +57,10 @@ function checkParams() {
         districtId: argv.district,
         interval: argv.interval || defaultInterval,
         appointmentsListLimit: argv.appts || appointmentsListLimit,
-        date: format(startOfTomorrow(), "dd-MM-yyyy"),
+        date: format(startOfToday(), "dd-MM-yyyy"),
       };
 
-      console.log("\nCowin Pinger started succesfully\n");
+      console.log("\nCowin Notifier started succesfully\n");
       console.log(`Age= ${params.age}`);
       console.log(`District ID= ${params.districtId}`);
       console.log(`Time interval= ${params.interval} minutes (default is 15)`);
@@ -67,18 +70,10 @@ function checkParams() {
       if (params.hook && params.key) {
         console.log(`IFTTT API Key= ${params.key || "not configured"}`);
         console.log(`IFTTT Hook Name= ${params.hook || "not configured"}`);
-      } else {
-        console.log(
-          "\nMake sure to turn up the volume to hear the notifcation sound"
-        );
       }
       console.log("\n\n");
       scheduleCowinPinger(params);
     }
-  } else {
-    console.log(
-      "\nInvalid command\n\nRun `cowin-pinger run` with all required params to start pinging cowin portal\nRefer documentation for instructions on how to run package\n"
-    );
   }
 }
 
@@ -120,7 +115,11 @@ function pingCowin({
               isSlotAvailable = true;
               appointmentsAvailableCount++;
               if (appointmentsAvailableCount <= appointmentsListLimit) {
-                dataOfSlot = `${dataOfSlot}\nSlot for ${session.available_capacity} is available: ${center.name} on ${session.date}`;
+                dataOfSlot = `${dataOfSlot}\nSlot for ${
+                  session.available_capacity
+                } Area: ${pincodes[center.pincode] || ""} Pin: ${
+                  center.pincode
+                }  on ${session.date}`;
               }
             }
           });
@@ -139,11 +138,9 @@ function pingCowin({
               value1: dataOfSlot,
             })
             .then(() => {
-              console.log("Sent Notification to Phone \nStopping Pinger...");
-            });
-        } else {
-          console.log(dataOfSlot);
-          console.log("Slots found\nStopping Pinger...");
+              console.log("Sent Notification to Phone");
+            })
+            .catch((err) => console.log("Error sending notification "));
         }
       }
     })
