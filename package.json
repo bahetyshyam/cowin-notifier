@@ -1,0 +1,35 @@
+{
+  "name": "cowin-notifier",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bahetyshyam/cowin-notifier.git"
+  },
+  "keywords": [
+    "cowin",
+    "covid",
+    "vaccine",
+    "notification",
+    "notifier",
+    "automation",
+    "script",
+    "ifttt"
+  ],
+  "author": "Shyam Bahety",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bahetyshyam/cowin-notifier/issues"
+  },
+  "homepage": "https://github.com/bahetyshyam/cowin-notifier#readme",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "date-fns": "^2.21.3",
+    "minimist": "^1.2.5",
+    "sound-play": "^1.1.0"
+  }
+}
